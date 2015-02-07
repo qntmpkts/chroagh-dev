@@ -46,7 +46,7 @@ elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
 fi
 
 # Add the primary user
-groups='audio,video,plugdev'
+groups='audio,video,sudo,plugdev'
 if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
     groups="$groups,sudo"
 elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
@@ -63,7 +63,7 @@ for group in `echo "$groups" | tr ',' ' '`; do
 done
 
 username="`awk -F: '$3==1000{print $1; exit}' '/etc/passwd'`"
-if [ -z "$username" ]; then
+if ! grep -q ':1000:' /etc/passwd; then
     while ! echo "$username" | grep -q '^[a-z][-a-z0-9_]*$'; do
         if [ -n "$username" ]; then
             echo 'Username must be lowercase letters, numbers, or dashes.' 1>&2
