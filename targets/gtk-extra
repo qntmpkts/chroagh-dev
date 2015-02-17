@@ -7,7 +7,11 @@ DESCRIPTION='GTK-based tools including gdebi, gksu, and a simple browser.'
 . "${TARGETSDIR:="$PWD"}/common"
 
 ### Append to prepare.sh:
+#JOEL: Ignored from "avoid network-manager issues on gtk desktop targets"
+#install_dummy network-manager network-manager-gnome
 install arch=,gdebi arch=,gksu arch=netsurf,netsurf-gtk
+
+
 
 if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
     # Add netsurf-gtk to Debian-alternatives if not already there
