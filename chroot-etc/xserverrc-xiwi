@@ -17,7 +17,6 @@ if [ -f /etc/crouton/xserverrc-local ]; then
     . /etc/crouton/xserverrc-local
 fi
 
-<<<<<<< HEAD
 # Find the Xorg executable (first 2 required by Arch, third by Debian/Ubuntu)
 XBINS="/usr/lib/xorg-server/Xorg /usr/bin/Xorg.bin /usr/bin/Xorg"
 XBIN=""
