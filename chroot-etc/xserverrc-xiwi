@@ -17,6 +17,7 @@ if [ -f /etc/crouton/xserverrc-local ]; then
     . /etc/crouton/xserverrc-local
 fi
 
+<<<<<<< HEAD
 # Find the Xorg executable (first 2 required by Arch, third by Debian/Ubuntu)
 XBINS="/usr/lib/xorg-server/Xorg /usr/bin/Xorg.bin /usr/bin/Xorg"
 XBIN=""
@@ -33,8 +34,10 @@ if [ -z "$XBIN" ]; then
 fi
 
 # Handle Freon systems
-if [ ! -f "/sys/class/tty/tty0/active" ]; then
-    export LD_PRELOAD="/usr/local/lib/croutonfreon.so:$LD_PRELOAD"
-fi
+# if [ ! -f "/sys/class/tty/tty0/active" ]; then
+#     export LD_PRELOAD="/usr/local/lib/croutonfreon.so:$LD_PRELOAD"
+# fi
+
+export LD_PRELOAD="/usr/local/lib/croutonxorg.so:$LD_PRELOAD"
 
 exec "$XBIN" $XARGS "$@"
