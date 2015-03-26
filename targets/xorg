@@ -36,6 +36,8 @@ if release -eq precise; then
     else
         # ARM only offers quantal backport at the moment
         backport='-lts-quantal'
+        # Also, xorg is packaged wrong and doesn't recognize the backport
+        install_dummy xserver-xorg
     fi
     if [ -n "$backport" ]; then
         # We still install xorg later to pull in its dependencies
@@ -113,8 +115,14 @@ END
     apt-get -y --force-yes --no-install-recommends dist-upgrade -f
 fi
 
-install xorg arch=,dmz-cursor-theme arch=ttf-dejavu \
-        arch=,xserver-xorg-video-fbdev$backport
+install xorg arch=,dmz-cursor-theme arch=ttf-dejavu
+
+#JOEL: Uses modesetting for Freon instead of fbdev (NO ARCH IMPACT?)
+if [ ! -f "/sys/class/tty/tty0/active" ]; then
+    install arch=,xserver-xorg-video-modesetting$backport
+else
+    install arch=,xserver-xorg-video-fbdev$backport
+fi
 
 if [ "${ARCH#arm}" = "$ARCH" ]; then
     install arch=,xserver-xorg-video-intel$backport
