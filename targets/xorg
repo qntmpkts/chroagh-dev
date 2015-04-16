@@ -124,8 +124,20 @@ else
     install arch=,xserver-xorg-video-fbdev$backport
 fi
 
+# JOEL: THIS IS A HUGE FUCKING MESS AND I DON'T NEED IT.
+# If the system has an Intel FBC-capable video card but has too old a driver to
+# support the chipset, disable hardware acceleration.
+hasfbc=''
+fbcsupport='y'
+if grep -q 1 '/sys/module/i915/parameters/i915_enable_fbc' 2>/dev/null; then
+    hasfbc=y
+    if release -le wheezy -le kali; then
+        fbcsupport=''
+    fi
+fi
+inteldriver=''
 if [ "${ARCH#arm}" = "$ARCH" ]; then
-    install arch=,xserver-xorg-video-intel$backport
+    install arch=,$inteldriver
 fi
 
 if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
@@ -137,11 +149,14 @@ elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
 allowed_users=anybody
 needs_root_rights=yes
 EOF
+
+if [ -z "$hasfbc" -o -n "$fbcsupport" ]; then
+    install $inteldriver
 fi
 
 # This is a system with framebuffer compression, so we need SNA+tearfree
 xorgconf='/usr/share/X11/xorg.conf.d/20-crouton-intel-sna.conf'
-if grep -q 1 '/sys/module/i915/parameters/i915_enable_fbc' 2>/dev/null; then
+if [ -n "$hasfbc" -a -n "$fbcsupport" ]; then
     mkdir -p "${xorgconf%/*}"
     ln -sfT /etc/crouton/xorg-intel-sna.conf "$xorgconf"
 else
