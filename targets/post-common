@@ -48,7 +48,7 @@ fi
 # Add the primary user
 groups='audio,video,sudo,plugdev'
 if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
-    groups="$groups,sudo"
+    groups="$groups,sudo,input"
 elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
     groups="$groups,users,wheel"
     if [ ! -e /etc/sudoers.d/00-wheel ]; then

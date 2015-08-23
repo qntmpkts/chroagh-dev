@@ -14,6 +14,7 @@ install arch=,gdebi arch=,gksu arch=netsurf,netsurf-gtk
 
 
 if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
+    install_dummy network-manager network-manager-gnome
     # Add netsurf-gtk to Debian-alternatives if not already there
     netsurf='/usr/bin/netsurf-gtk'
     for link in x-www-browser gnome-www-browser; do
