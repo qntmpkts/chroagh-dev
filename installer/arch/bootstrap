@@ -97,6 +97,13 @@ while [ -n "$missing" ]; do
     package="${missing%% *}"
     missing="${missing#$package }"
 
+    # skip libncursesw.so (fix issue #100)
+    if [ "$package" = "libncursesw.so" ]; then 
+        echo "skipping $package"
+        installed="$installed $package "
+        continue
+    fi;
+
     # Do not install if already installed
     if [ "${installed#*" $package "}" != "$installed" ]; then
         continue
