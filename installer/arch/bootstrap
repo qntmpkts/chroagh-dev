@@ -73,12 +73,18 @@ getdbfield() {
     local repo="$FETCHDIRDB/$1.db"
     local file="$2/$3"
     local field="$4"
-    # Extract the relevant file
-    tar xf "$repo" -O "$file" | awk '
-        /^$/ { m = 0 }
-        m { print }
-        /^%'"$field"'%$/ { m = 1 }
-    '
+
+    # since pacman-3.5 depends have been merged into desc file for most packages
+    if [ "$3" = "depends" ] && ! (tar tf "$repo" | grep -q "$file"); then
+        getdbfield "$1" "$2" "desc" "$4"
+    else
+        # Extract the relevant file
+        tar xf "$repo" -O "$file" | awk '
+            /^$/ { m = 0 }
+            m { print }
+            /^%'"$field"'%$/ { m = 1 }
+        '
+    fi
 }
 
 echo "Downloading and extracting packages..." 1>&2
@@ -102,7 +108,7 @@ while [ -n "$missing" ]; do
         echo "skipping $package"
         installed="$installed $package "
         continue
-    fi;
+    fi
 
     # Do not install if already installed
     if [ "${installed#*" $package "}" != "$installed" ]; then
