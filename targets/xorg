@@ -49,7 +49,7 @@ intelhasfbc=''
 pinmesa=''
 intelfbcsupport='y'
 if [ "${ARCH#arm}" = "$ARCH" ]; then
-    inteldriver="xserver-xorg-video-intel$backport"
+    inteldriver="arch=xf86-video-intel,xserver-xorg-video-intel$backport"
 
     # If the system has an Intel FBC-capable video card but has too old a driver
     # to support the chipset, we'll need to disable hardware acceleration.
@@ -73,9 +73,9 @@ if [ "${ARCH#arm}" = "$ARCH" ]; then
 fi
 
 # Catalog relevant and irrelevant video drivers
-# Debian sid has modesetting built into xserver-xorg-core
-fbdev="xserver-xorg-video-fbdev$backport"
-modesetting="xserver-xorg-video-modesetting$backport,debian~sid+ubuntu~vivid="
+# Debian sid has modesetting built into xserver-xorg-core; Arch built into xorg-server
+fbdev="arch=xf86-video-fbdev,xserver-xorg-video-fbdev$backport"
+modesetting="xserver-xorg-video-modesetting$backport,debian~sid+ubuntu~vivid+arch="
 installvideodrivers=''
 removevideodrivers=''
 if [ -n "$freon" ]; then
@@ -190,50 +190,7 @@ if [ -z "$inteldriver" -a -n "$backport" ] && release -eq precise; then
         x11-xserver-utils xauth xinit xfonts-utils xkb-data xorg-docs-core \
         xterm x11-common xinput
 else
-    install xorg $installvideodrivers -- xserver-xorg-video-all$backport
-fi
-
-# Remove bad video drivers
-if [ -n "$removevideodrivers" ]; then
-    remove $removevideodrivers
-fi
-
-# If this is a system with framebuffer compression, we need SNA+tearfree
-xorgconf='/usr/share/X11/xorg.conf.d/20-crouton-intel-sna.conf'
-if [ -n "$intelhasfbc" -a -n "$intelfbcsupport" ]; then
-    mkdir -p "${xorgconf%/*}"
-    ln -sfT /etc/crouton/xorg-intel-sna.conf "$xorgconf"
-else
-    # In case this got moved to a different system, delete the config
-    rm -f "$xorgconf"
-fi
-
-#JOEL: I think this is all taken care of eksewhere now?
-install xorg arch=,dmz-cursor-theme arch=ttf-dejavu \
-        arch=,xserver-xorg-video-fbdev$ltspackages \
-        arch=,xserver-xorg-video-intel$ltspackages
-
-if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
-    # Fix launching X11 from inside crosh (user doesn't own a TTY)
-    sed -i 's/allowed_users=.*/allowed_users=anybody/' '/etc/X11/Xwrapper.config'
-elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
-    # Xorg 1.16 wants to run as normal user, which breaks crouton
-    cat >/etc/X11/Xwrapper.config <<EOF
-allowed_users=anybody
-needs_root_rights=yes
-EOF
-
-# Install xorg, no video drivers
-if [ -z "$inteldriver" -a -n "$backport" ] && release -eq precise; then
-    # xorg is packaged wrong on ARM and conflicts with xserver-xorg-lts-quantal
-    # so replace it with something not broken
-    install_dummy xorg -- xserver-xorg$backport libgl1-mesa-glx$backport \
-        libgl1-mesa-dri$backport libglu1-mesa xfonts-base x11-apps \
-        x11-session-utils x11-utils x11-xfs-utils x11-xkb-utils \
-        x11-xserver-utils xauth xinit xfonts-utils xkb-data xorg-docs-core \
-        xterm x11-common xinput
-else
-    install xorg arch=,$installvideodrivers -- arch=,xserver-xorg-video-all$backport
+    install xorg $installvideodrivers -- arch=,xserver-xorg-video-all$backport
     install arch=ttf_dejavu
 fi
 
@@ -255,23 +212,6 @@ fi
 # Fix launching X11 from inside crosh (user doesn't own a TTY)
 sed -i 's/allowed_users=.*/allowed_users=anybody/' \
     '/etc/X11/Xwrapper.config' || true
-
-inteldrv='/usr/lib/xorg/modules/drivers/intel_drv.so'
-if [ -n "$freon" -a -e "$inteldrv" ]; then
-    # Modify the Intel driver to call getuid0 (provided by croutonfreon.so)
-    # instead of geteuid, to force DRM master setting/dropping.
-    offset="`grep -F -m 1 -boa 'geteuid' "$inteldrv" 2>/dev/null || true`"
-    if [ -n "$offset" ]; then
-        echo -n 'getuid0' | dd seek="${offset%:*}" bs=1 of="$inteldrv" \
-                               conv=notrunc,nocreat 2>/dev/null
-    fi
-
-    if grep -F -q -a 'getuid0' "$inteldrv" 2>/dev/null; then
-        # Hold xserver-xorg-video-intel to make sure that the modification
-        # (which may have been made in a previous update) does not get erased.
-        apt-mark hold "$inteldriver"
-    fi
-fi
 
 inteldrv='/usr/lib/xorg/modules/drivers/intel_drv.so'
 if [ -n "$freon" -a -e "$inteldrv" ]; then

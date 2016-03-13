@@ -38,8 +38,6 @@ install --minimal arch=,dmz-cursor-theme
 # Install bsdmainutils, xbindkeys and xautomation for shortcuts; kbd for chvt
 install --minimal arch=,bsdmainutils xbindkeys xautomation kbd
 
-# Install bsdmainutils, xbindkeys and xautomation for shortcuts; kbd for chvt
-install --minimal bsdmainutils xbindkeys xautomation kbd
 # Allow users to run sudo chvt without password, so we don't need to run
 # croutoncycle as root
 sudogroup="sudo"
