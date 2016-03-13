@@ -1,5 +1,5 @@
 #!/bin/sh -e
-# Copyright (c) 2015 The crouton Authors. All rights reserved.
+# Copyright (c) 2016 The crouton Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 if [ "${TARGETNOINSTALL:-c}" = 'c' ]; then
@@ -55,7 +55,7 @@ if [ "${ARCH#arm}" = "$ARCH" ]; then
     # to support the chipset, we'll need to disable hardware acceleration.
     if grep -q 1 '/sys/module/i915/parameters/i915_enable_fbc' 2>/dev/null; then
         intelhasfbc=y
-        if release -le wheezy -le kali; then
+        if release -le wheezy -le sana; then
             intelfbcsupport=''
         fi
     fi
@@ -253,7 +253,8 @@ else
 fi
 
 # Fix launching X11 from inside crosh (user doesn't own a TTY)
-sed -i 's/allowed_users=.*/allowed_users=anybody/' '/etc/X11/Xwrapper.config'
+sed -i 's/allowed_users=.*/allowed_users=anybody/' \
+    '/etc/X11/Xwrapper.config' || true
 
 inteldrv='/usr/lib/xorg/modules/drivers/intel_drv.so'
 if [ -n "$freon" -a -e "$inteldrv" ]; then

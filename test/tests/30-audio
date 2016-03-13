@@ -85,8 +85,8 @@ echo 'install pulseaudio arch=,pulseaudio-utils arch=pulseaudio-alsa,' | \
     crouton -T -U -n "$release"
 exitswithin 0 30 host enter-chroot -n "$release" sh -exc '
     pulseaudio --start
-    dd if=/dev/zero bs=44100 count=8 | pacat -v
-    parec -v | dd of=/dev/null bs=44100 count=8 iflag=fullblock
+    dd if=/dev/zero bs=48000 count=8 | pacat -v
+    parec -v | dd of=/dev/null bs=48000 count=8 iflag=fullblock
     dd if=/dev/zero bs=48000 count=8 | aplay -f dat -Dpulse -v
     arecord -fdat -Dpulse -v | \
         dd of=/dev/null bs=48000 count=8 iflag=fullblock
