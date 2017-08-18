@@ -94,7 +94,7 @@ distropkgs() {
             done
         done
         # Print out the result or error out if nothing found
-        if [ ! "$pkgname" = '.' ]; then
+        if [ "$pkgname" != '.' ]; then
             echo -n "$pkgname "
         else
             error 2 "Nothing specified for $DISTRO~$RELEASE in '$descriptor'"
@@ -199,7 +199,7 @@ compile() {
     fi
     shift 2
     echo "Installing dependencies for $out..." 1>&2
-    local pkgs="gcc arch=,libc6-dev $*"
+    local pkgs="gcc libc6-dev $*"
     install --minimal --asdeps $pkgs </dev/null
     echo "Compiling $out..." 1>&2
     local tmp="`mktemp crouton.XXXXXX --tmpdir=/tmp`"

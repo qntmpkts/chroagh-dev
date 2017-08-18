@@ -29,11 +29,9 @@ TARPARAMS ?= -j
 
 CFLAGS=-g -Wall -Werror -Os
 
-croutoncursor_LIBS = -lX11 -lXfixes -lXrender
 croutonfbserver_LIBS = -lX11 -lXdamage -lXext -lXfixes -lXtst
-croutonwmtools_LIBS = -lX11
 croutonxi2event_LIBS = -lX11 -lXi
-croutonfreon.so_LIBS = -ldl
+croutonfreon.so_LIBS = -ldl -ldrm -I/usr/include/libdrm
 
 croutonwebsocket_DEPS = src/websocket.h
 croutonfbserver_DEPS = src/websocket.h
@@ -79,7 +77,7 @@ $(CONTRIBUTORS): $(GITHEAD) $(CONTRIBUTORSSED)
 contributors: $(CONTRIBUTORS)
 
 release: $(CONTRIBUTORS) $(TARGET) $(RELEASE)
-	[ ! -d .git ] || git status | grep -q 'working directory clean' || \
+	[ ! -d .git ] || git status | grep -q 'working [a-z]* clean' || \
 		{ echo "There are uncommitted changes. Aborting!" 1>&2; exit 2; }
 	$(RELEASE) $(TARGET)
 

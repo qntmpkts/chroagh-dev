@@ -31,6 +31,11 @@ fi
 install xorg arch=xf86-video-dummy,xserver-xorg-video-dummy$ltspackages
 install --minimal arch=i3-wm,i3
 
+# Remove some unsupported options on old versions of i3
+if release -le precise; then
+     sed -i '/#.*#.*#.*#/s/ #......$//;/--release/d' /etc/crouton/xiwi.conf
+fi
+
 # Compile croutonfbserver
 compile fbserver '-lX11 -lXfixes -lXdamage -lXext -lXtst' \
         arch=,libx11-dev arch=,libxfixes-dev arch=,libxdamage-dev \
@@ -40,7 +45,7 @@ compile findnacld ''
 ln -sf /etc/crouton/xorg-dummy.conf /etc/X11/
 
 # Download the latest xf86-video-dummy package
-urlbase="http://xorg.freedesktop.org/releases/individual/driver/"
+urlbase="https://xorg.freedesktop.org/releases/individual/driver"
 
 DUMMYBUILDTMP="`mktemp -d crouton-cras.XXXXXX --tmpdir=/tmp`"
 
@@ -48,7 +53,13 @@ addtrap "rm -rf --one-file-system '$DUMMYBUILDTMP'"
 
 echo "Download Xorg dummy driver..." 1>&2
 
-wget -O "$DUMMYBUILDTMP/dummy.tar.gz" "$urlbase/xf86-video-dummy-0.3.7.tar.gz"
+superinsecure=''
+if release -le wheezy; then
+     # Wheezy doesn't have the right CA in ca-certificates that validates x.org
+     superinsecure='--no-check-certificate'
+fi
+wget $superinsecure -O "$DUMMYBUILDTMP/dummy.tar.gz" \
+     "$urlbase/xf86-video-dummy-0.3.8.tar.gz"
 
 install --minimal --asdeps patch gcc arch=glibc,libc-dev pkg-config \
     arch=xorg-server-devel,xserver-xorg-dev$ltspackages arch=,x11proto-xf86dga-dev
@@ -61,7 +72,7 @@ install --minimal --asdeps patch gcc arch=glibc,libc-dev pkg-config \
     echo "Patching Xorg dummy driver (xrandr 1.2 support)..." 1>&2
     patch -p1 <<EOF
 diff --git a/src/dummy_driver.c b/src/dummy_driver.c
-index 6062c39..3414a6d 100644
+index 2656602..0718e1f 100644
 --- a/src/dummy_driver.c
 +++ b/src/dummy_driver.c
 @@ -34,6 +34,8 @@
@@ -73,7 +84,7 @@ index 6062c39..3414a6d 100644
  /*
   * Driver data structures.
   */
-@@ -178,6 +180,115 @@ dummySetup(pointer module, pointer opts, int *errmaj, int *errmin)
+@@ -175,6 +177,115 @@ dummySetup(pointer module, pointer opts, int *errmaj, int *errmin)
  #endif /* XFree86LOADER */
  
  static Bool
@@ -189,16 +200,16 @@ index 6062c39..3414a6d 100644
  DUMMYGetRec(ScrnInfoPtr pScrn)
  {
      /*
-@@ -283,6 +394,8 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
+@@ -280,6 +391,8 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
      DUMMYPtr dPtr;
-     int maxClock = 230000;
+     int maxClock = 300000;
      GDevPtr device = xf86GetEntityInfo(pScrn->entityList[0])->device;
 +    xf86OutputPtr output;
 +    xf86CrtcPtr crtc;
  
      if (flags & PROBE_DETECT) 
  	return TRUE;
-@@ -346,13 +459,6 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
+@@ -343,13 +456,6 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
      if (!xf86SetDefaultVisual(pScrn, -1)) 
  	return FALSE;
  
@@ -212,7 +223,7 @@ index 6062c39..3414a6d 100644
      xf86CollectOptions(pScrn, device->options);
      /* Process the options */
      if (!(dPtr->Options = malloc(sizeof(DUMMYOptions))))
-@@ -382,64 +488,45 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
+@@ -379,64 +485,45 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
  		   maxClock);
      }
  
@@ -225,7 +236,7 @@ index 6062c39..3414a6d 100644
 -    clockRanges->next = NULL;
 -    clockRanges->ClockMulFactor = 1;
 -    clockRanges->minClock = 11000;   /* guessed §§§ */
--    clockRanges->maxClock = 300000;
+-    clockRanges->maxClock = maxClock;
 -    clockRanges->clockIndex = -1;		/* programmable */
 -    clockRanges->interlaceAllowed = TRUE; 
 -    clockRanges->doubleScanAllowed = TRUE;
@@ -253,11 +264,12 @@ index 6062c39..3414a6d 100644
 +    crtc = xf86CrtcCreate(pScrn, &dummy_crtc_funcs);
 +
 +    output = xf86OutputCreate (pScrn, &dummy_output_funcs, "default");
-+
-+    output->possible_crtcs = 0x7f;
  
 -    /* Prune the modes marked as invalid */
 -    xf86PruneDriverModes(pScrn);
++    output->possible_crtcs = 0x7f;
+
+-    if (i == 0 || pScrn->modes == NULL) {
 +    xf86InitialConfiguration(pScrn, TRUE);
 +
 +    if (pScrn->depth > 1) {
@@ -266,8 +278,7 @@ index 6062c39..3414a6d 100644
 +	if (!xf86SetGamma(pScrn, zeros))
 +	    return FALSE;
 +    }
- 
--    if (i == 0 || pScrn->modes == NULL) {
++
 +    if (pScrn->modes == NULL) {
  	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No valid modes found\n");
  	RETURN;
@@ -303,7 +314,7 @@ index 6062c39..3414a6d 100644
      if (xf86LoadSubModule(pScrn, "fb") == NULL) {
  	RETURN;
      }
-@@ -559,6 +646,8 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
+@@ -537,6 +624,8 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
  
      if (!miSetPixmapDepths ()) return FALSE;
  
@@ -312,7 +323,7 @@ index 6062c39..3414a6d 100644
      /*
       * Call the framebuffer layer's ScreenInit function, and fill in other
       * pScreen fields.
-@@ -597,23 +686,6 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
+@@ -575,23 +664,6 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
      if (dPtr->swCursor)
  	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Using Software Cursor.\n");
  
@@ -336,7 +347,7 @@ index 6062c39..3414a6d 100644
      xf86SetBackingStore(pScreen);
      xf86SetSilkenMouse(pScreen);
  	
-@@ -640,6 +712,9 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
+@@ -618,6 +690,9 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
  			     | CMAP_RELOAD_ON_MODE_SWITCH))
  	return FALSE;
  
@@ -348,11 +359,11 @@ index 6062c39..3414a6d 100644
      pScreen->SaveScreen = DUMMYSaveScreen;
 EOF
 
-    # Fake version 0.3.8
+    # Fake version 0.3.9
     package="xf86-video-dummy"
     major='0'
     minor='3'
-    patch='8'
+    patch='9'
     version="$major.$minor.$patch"
 
     sed -e '

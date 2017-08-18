@@ -1,15 +1,16 @@
 #!/bin/sh -e
-# Copyright (c) 2015 The Chromium OS Authors. All rights reserved.
+# Copyright (c) 2016 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 # All supported releases should be able to launch an xorg server
 if [ -z "$release" ]; then
-    if grep -q 'SAMSUNG EXYNOS' /proc/cpuinfo && [ ! -f /sbin/frecon ]; then
-        log "xorg is not available on Samsung ARM. Skipping test."
-    else
-        echo "all"
-    fi
+    # xorg does not work well on wheezy
+    for rel in $SUPPORTED_RELEASES; do
+        if [ "$rel" != wheezy ]; then
+            echo "$rel"
+        fi
+    done
     exit 0
 fi
 
@@ -17,7 +18,7 @@ snapshot "$release" audio
 crouton -U -n "$release" -t xorg
 
 echo '
-    install arch=mesa-demos,mesa-utils
+    iinstall arch=mesa-demos,mesa-utils
     mkdir -p /home/tmp
     chmod 777 /home/tmp
     cat > /home/tmp/xinitrc <<END

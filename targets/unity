@@ -5,8 +5,10 @@
 if [ "${TARGETNOINSTALL:-c}" = 'c' ]; then
     if [ "$DISTRO" != 'ubuntu' ]; then
         error 99 "unity target is only supported on Ubuntu."
-    elif [ "${ARCH#arm}" != "$ARCH" ] && ! release -eq precise; then
-        error 99 "unity target does not work in xephyr in $RELEASE due to missing egl support."
+    fi
+
+    if [ "${ARCH#arm}" != "$ARCH" ] && release -gt precise; then
+        error 99 "unity is unsupported on ARM for releases after precise."
     fi
 fi
 REQUIRES='gtk-extra'
@@ -17,9 +19,13 @@ CHROOTETC='unity-autostart.desktop unity-profiled'
 . "${TARGETSDIR:="$PWD"}/common"
 
 ### Append to prepare.sh:
-install unity unity-2d ubuntu-artwork gnome-session nautilus \
-        ubuntu-settings,ubuntu~precise= \
-        ubuntu-session,ubuntu~precise+ubuntu~quantal+ubuntu~raring+ubuntu~saucy= \
+# Note that whitespace is important for syntax.
+# See distropkgs method in installer/prepare.sh
+install unity ubuntu-artwork gnome-session nautilus ttf-ubuntu-font-family \
+        pulseaudio \
+        ubuntu~precise=unity-2d, \
+        ubuntu~precise=,ubuntu-settings \
+        ubuntu~precise=,ubuntu-session \
         -- network-manager brasero firefox
 
 # XDG autostart/profile.d additions only needed in saucy and later

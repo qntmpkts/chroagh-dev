@@ -2,11 +2,6 @@
 # Copyright (c) 2016 The crouton Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-if [ "${TARGETNOINSTALL:-c}" = 'c' ]; then
-    if grep -q 'SAMSUNG EXYNOS' /proc/cpuinfo && [ ! -f /sbin/frecon ]; then
-        error 1 'xorg target does not work on Samsung ARM devices.'
-    fi
-fi
 REQUIRES='audio'
 PROVIDES='x11'
 DESCRIPTION='X.Org X11 backend. Enables GPU acceleration on supported platforms.'
@@ -75,7 +70,14 @@ fi
 # Catalog relevant and irrelevant video drivers
 # Debian sid has modesetting built into xserver-xorg-core; Arch built into xorg-server
 fbdev="arch=xf86-video-fbdev,xserver-xorg-video-fbdev$backport"
-modesetting="xserver-xorg-video-modesetting$backport,debian~sid+ubuntu~vivid+arch="
+
+if release -lt sid -lt kali-rolling -lt vivid; then
+    modesetting="xserver-xorg-video-modesetting$backport,debian~sid+ubuntu~vivid+arch="
+else
+    # modesetting is built into xserver-xorg-core
+    modesetting=''
+fi
+
 installvideodrivers=''
 removevideodrivers=''
 if [ -n "$freon" ]; then
@@ -96,7 +98,7 @@ fi
 
 # On Freon, we need crazy xorg hacks
 if [ -n "$freon" ]; then
-    compile freon '-ldl' so
+    compile freon '-ldl -ldrm -I/usr/include/libdrm' so libdrm-dev
 fi
 
 # Pin precise's version of mesa if necessary
@@ -180,6 +182,13 @@ if [ -n "$backport" ]; then
         "xserver-xorg-input-synaptics$backport" $installvideodrivers
 fi
 
+if release -lt stretch -lt kali-rolling -lt yakkety; then
+    vmmouse='xserver-xorg-input-vmmouse'
+else
+    # xserver-xorg-input-vmmouse is obsolete
+    vmmouse=''
+fi
+
 # Install xorg, no video drivers
 if [ -z "$inteldriver" -a -n "$backport" ] && release -eq precise; then
     # xorg is packaged wrong on ARM and conflicts with xserver-xorg-lts-quantal
@@ -190,7 +199,8 @@ if [ -z "$inteldriver" -a -n "$backport" ] && release -eq precise; then
         x11-xserver-utils xauth xinit xfonts-utils xkb-data xorg-docs-core \
         xterm x11-common xinput
 else
-    install xorg $installvideodrivers -- arch=,xserver-xorg-video-all$backport
+    install xorg $installvideodrivers -- arch=,xserver-xorg-video-all$backport \
+        $vmmouse
     install arch=ttf-dejavu
 fi
 
@@ -210,8 +220,7 @@ else
 fi
 
 # Fix launching X11 from inside crosh (user doesn't own a TTY)
-sed -i 's/allowed_users=.*/allowed_users=anybody/' \
-    '/etc/X11/Xwrapper.config' || true
+echo 'allowed_users=anybody' > '/etc/X11/Xwrapper.config'
 
 inteldrv='/usr/lib/xorg/modules/drivers/intel_drv.so'
 if [ -n "$freon" -a -e "$inteldrv" ]; then

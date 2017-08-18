@@ -75,15 +75,6 @@ if hash croutonclip 2>/dev/null; then
     croutonclip &
 fi
 
-# Pass through the host cursor and correct mousewheels on xephyr
-if [ "$xmethodtype" = 'xephyr' ]; then
-    host-x11 croutoncursor "$DISPLAY" &
-    if [ -z "$CROUTON_WHEEL_PARAMS" -a -r "$HOME/.croutonwheel" ]; then
-        CROUTON_WHEEL_PARAMS="`head -n1 "$HOME/.croutonwheel"`"
-    fi
-    croutonwheel $CROUTON_WHEEL_PARAMS &
-fi
-
 # Launch system-wide trigger daemon
 croutontriggerd &
 
@@ -112,6 +103,11 @@ if [ "$xmethodtype" != "xiwi" ]; then
 
     # Configure trackpad settings if needed
     if synclient >/dev/null 2>&1; then
+        # Elan trackpads usually like these settings
+        if grep -q 'Elan Touchpad' /sys/class/input/event*/device/name; then
+            SYNCLIENT="FingerLow=1 FingerHigh=5 $SYNCLIENT"
+        fi
+        # Other special cases
         case "`awk -F= '/_RELEASE_BOARD=/{print $2}' '/var/host/lsb-release'`" in
             butterfly*|falco*)
                 SYNCLIENT="FingerLow=1 FingerHigh=5 $SYNCLIENT";;
@@ -121,13 +117,6 @@ if [ "$xmethodtype" != "xiwi" ]; then
         if [ -n "$SYNCLIENT" ]; then
             synclient $SYNCLIENT
         fi
-    fi
-
-    # Make sure tap-to-click is enabled
-    if hash xinput 2>/dev/null; then
-        for id in `host-x11 xinput --list --id-only`; do
-            host-x11 xinput set-prop "$id" 'Tap Paused' 0 2>/dev/null || true
-        done
     fi
 fi
 
@@ -149,7 +138,7 @@ if [ "$xmethodtype" = 'xiwi' ]; then
         if [ "$try" -ge 10 ]; then
             echo "\
 Unable to start display, make sure the crouton extension is installed
-and enabled, and up to date. (download from http://goo.gl/OVQOEt)" 1>&2
+and enabled, and up to date. (download from https://goo.gl/OVQOEt)" 1>&2
             ret=1
             break
         fi
@@ -159,6 +148,23 @@ and enabled, and up to date. (download from http://goo.gl/OVQOEt)" 1>&2
     if [ "$ret" -eq 0 ]; then
         echo "Connected to extension, launched crouton in a window." 1>&2
     fi
+fi
+
+if [ "$xmethodtype" = "xorg" ]; then
+    # Since Chromium 56.0.2923.0, Chromium tries to switch off the display when
+    # switching VT (crbug.com/655770). For some unclear reason, running xrandr
+    # forces the display to be back on, and this is not needed ever again
+    # when switching VTs.
+    # The loop tries to work around a race that is more likely on xenial
+    try=1
+    while xrandr --auto 2>&1 | grep . 1>&2; do
+        echo "Kicking xrandr again" 1>&2
+        if [ "$try" -ge 10 ]; then
+            break
+        fi
+        sleep 1
+        try="$((try+1))"
+    done
 fi
 
 # Only run if no error occured before (e.g. cannot connect to extension)

@@ -17,7 +17,12 @@ install --minimal arch=,kde-plasma-desktop \
     arch=kde-meta-kdeplasma-addons, \
     arch=kde-meta-kdeutils, \
     arch=kdesdk-kate, \
+    kde-baseapps kde-runtime plasma-desktop pulseaudio \
     -- network-manager
+
+if release -lt xenial -lt kali -lt stretch; then
+    install --minimal kde-workspace
+fi
 
 TIPS="$TIPS
 You can start KDE via the startkde host command: sudo startkde

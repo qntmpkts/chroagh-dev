@@ -46,7 +46,7 @@ elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
 fi
 
 # Add the primary user
-groups='audio,video,sudo,plugdev'
+groups='audio,input,video,wayland,sudo,plugdev,crouton'
 if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
     groups="$groups,sudo,input"
 elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
@@ -68,7 +68,7 @@ if ! grep -q ':1000:' /etc/passwd; then
         if [ -n "$username" ]; then
             echo_tty 'Username must be lowercase letters, numbers, or dashes.'
         fi
-        echo_tty -n 'Please specify a username for the primary user: '
+        echo_tty -n "$(echo_color "b" "Please specify a username for the primary user: ")"
         if [ -n "$USERNAME" ]; then
             username="$USERNAME"
             echo "$username" 1>&2
@@ -76,9 +76,7 @@ if ! grep -q ':1000:' /etc/passwd; then
             read -r username junk
         fi
     done
-    # Create a group with the same name as the user (GID 1000)
-    groupadd -g 1000 "$username"
-    useradd -u 1000 -g 1000 -G "$groups" -s '/bin/bash' -m "$username"
+    useradd -u 1000 -G "$groups" -s '/bin/bash' -m "$username"
     if [ -t 0 ]; then
         tries=0
     else
@@ -92,6 +90,7 @@ if ! grep -q ':1000:' /etc/passwd; then
 "Password left unset. To set a password, inside the chroot run: passwd $username" 1>&2
     fi
 else
+    username="`awk -F: '$3==1000{print $1; exit}' '/etc/passwd'`"
     usermod -a -G "$groups" "$username"
 fi
 

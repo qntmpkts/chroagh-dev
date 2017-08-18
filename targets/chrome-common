@@ -9,7 +9,7 @@
 # This command expects CHANNEL to be set with the requested Google Chrome
 # channel: stable, beta, or unstable.
 
-if [ "${TARGETNOINSTALL:-c}" = 'c' ]; then
+if [ "${TARGETNOINSTALL:-c}" = 'c' -a "${ARCH#arm}" != "$ARCH" ]; then
     if [ "${ARCH#arm}" != "$ARCH" ]; then
         echo 'Google Chrome does not yet have an ARM build. Installing Chromium instead.' 1>&2
         TARGET=chromium
@@ -19,7 +19,11 @@ if [ "${TARGETNOINSTALL:-c}" = 'c' ]; then
 Google Chrome is not officially supported on Arch. You can either install
 Chromium by specifying the chromium target, or install Google Chrome manually
 or via AUR."
-    fi
+fi
+if [ "${TARGETNOINSTALL:-c}" = 'c' ] && release -lt saucy -lt jessie; then
+    echo "Google Chrome is not supported on $RELEASE anymore. Installing Chromium instead." 1>&2
+    TARGET=chromium
+    . "${TARGETSDIR:="$PWD"}/$TARGET"
 fi
 if [ "${TARGETNOINSTALL:-c}" = 'c' -a "$TARGET" != 'chrome' ]; then
     # Avoid installing multiple chrome targets

@@ -61,8 +61,9 @@ fi
 # A blank parameter means we are building for the native architecture.
 build_cras() {
     local cras_arch="$1"
-    local pkgaffix=''
+    local pkgsuffix=''
     local pkgdepextra=''
+    local archextrapath=''
     local pkgconfigpath=''
     local archgccflags=''
     if [ -n "$cras_arch" ]; then
@@ -80,35 +81,35 @@ build_cras() {
             apt-get update || true
         fi
 
-      elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
+    elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
         pkgsuffix="lib32-"
         pkgconfigpath="/usr/lib32/pkgconfig"
-      fi
+    fi
 
       archgccflags='-m32'
     fi
 
     # Install CRAS dependencies
     install --minimal alsa-utils \
-        arch=${pkgaffix}alsa-lib,libasound2$pkgaffix \
-        arch=${pkgaffix}speex,libspeexdsp1$pkgaffix
+        arch=${pkgsuffix}alsa-lib,libasound2$pkgsuffix \
+        arch=${pkgsuffix}speex,libspeexdsp1$pkgsuffix
 
     install --minimal --asdeps gcc $pkgdepextra arch=,libc6-dev$pkgaffix \
-        pkg-config arch=,libspeexdsp-dev$pkgaffix
+        pkg-config arch=,libspeexdsp-dev$pkgsuffix
 
     # precise does not allow libasound2-dev and libasound2-dev:i386 to be
     # installed simultaneously
     if release -le precise && [ -n "$cras_arch" ]; then
         install --minimal --asdeps libasound2-dev
         # Manually link .so file
-        libasoundso="/usr/lib/$cras_arch-linux-gnu/libasound.so"
+        libasoundso="/usr/lib$archextrapath/libasound.so"
         if [ ! -f "$libasoundso" ]; then
             addtrap "rm -f '$libasoundso' 2>/dev/null"
             ln -sfT libasound.so.2 "$libasoundso"
         fi
-        ALSALIBDIR="/usr/lib/$cras_arch-linux-gnu/alsa-lib"
+        ALSALIBDIR="/usr/lib$archextrapath/alsa-lib"
     else
-        install --minimal --asdeps arch=,libasound2-dev$pkgaffix
+        install --minimal --asdeps libasound2-dev$pkgsuffix
         ALSALIBDIR="`PKG_CONFIG_PATH="$pkgconfigpath" \
                                 pkg-config --variable=libdir alsa`/alsa-lib"
     fi
@@ -150,13 +151,8 @@ END
         sed -e 's/SBC_[A-Z0-9_]*/0/g' -i tests/cras_test_client.c
 
         # Directory to install CRAS library/binaries
-        if [ -n "$cras_arch" ]; then
-            CRASLIBDIR="/usr/local/$cras_arch-linux-gnu/lib"
-            CRASBINDIR="/usr/local/$cras_arch-linux-gnu/bin"
-        else
-            CRASLIBDIR="/usr/local/lib"
-            CRASBINDIR="/usr/local/bin"
-        fi
+        CRASLIBDIR="/usr/local$archextrapath/lib"
+        CRASBINDIR="/usr/local$archextrapath/bin"
 
         echo "Compiling CRAS (${cras_arch:-native})..." 1>&2
         # Convert Makefile.am to a shell script, and run it.
@@ -284,7 +280,7 @@ echo '#!/bin/sh
 
 defaultpa="'"$paconfigdir"'/default.pa"
 # Do not install if user is root, or $HOME does not exist
-if [ "`id -u`" -ne 0 -a -d "$HOME" ]; then
+if [ "`id -u`" -ne 0 -a -d "$HOME" -a ! -e "$defaultpa" ]; then
     if [ ! -e "$defaultpa" ]; then
         mkdir -p "'"$paconfigdir"'"
         ln -sfT /etc/crouton/pulseaudio-default.pa "$defaultpa"

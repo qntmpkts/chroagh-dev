@@ -20,10 +20,10 @@
 set -e
 
 APPLICATION="${0##*/}"
-SCRIPTDIR="`readlink -f "\`dirname "$0"\`/.."`"
+SCRIPTDIR="`readlink -f -- "\`dirname "$0"\`/.."`"
 # List of all supported (non-*'d) releases
 SUPPORTED_RELEASES="`awk -F'|' '
-    ($1 ~ /[^*]$/ && $2 !~ /(^|,)notest($|,)/) || $2 ~ /(^|,)test($|,)/ \
+    ($1 ~ /[a-z]$/ && $2 !~ /(^|,)notest($|,)/) || $2 ~ /(^|,)test($|,)/ \
         { sub(/[^a-z]*$/, "", $1); printf $1 " " }' \
     "$SCRIPTDIR/installer/"*"/releases"`"
 SUPPORTED_RELEASES="${SUPPORTED_RELEASES%" "}"
@@ -79,7 +79,7 @@ done
 shift "$((OPTIND-1))"
 
 # We need to run as root
-if [ ! "$USER" = root -a ! "$UID" = 0 ]; then
+if [ "$USER" != root -a "$UID" != 0 ]; then
     error 2 "${0##*/} must be run as root."
 fi
 
@@ -433,6 +433,9 @@ export CROUTON_MOUNT_RESPONSE='y'
 export CROUTON_UNMOUNT_RESPONSE='y'
 # Test machines lack entropy: Use /dev/urandom instead of /dev/random
 export CROUTON_WEAK_RANDOM='y'
+# HACK: restart debugd when running tests to avoid namespace issues.
+# This will go away when we start using mount namespaces.
+export CROUTON_UNMOUNT_RESTART_DEBUGD='y'
 
 # Prevent powerd from sleeping the system
 sh -e "$SCRIPTDIR/chroot-bin/croutonpowerd" -i &

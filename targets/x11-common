@@ -35,17 +35,17 @@ ln -sf croutonpowerd /usr/local/bin/xscreensaver-command
 # Install nicer cursors
 install --minimal arch=,dmz-cursor-theme
 
-# Install bsdmainutils, xbindkeys and xautomation for shortcuts; kbd for chvt
-install --minimal arch=,bsdmainutils xbindkeys xautomation kbd
+# Install bsdmainutils, xbindkeys and xautomation for shortcuts
+install --minimal arch=,bsdmainutils xbindkeys xautomation
 
-# Allow users to run sudo chvt without password, so we don't need to run
-# croutoncycle as root
-sudogroup="sudo"
-if [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
-    sudogroup="wheel"
+# We need chvt on freon systems
+if [ -f "/sys/class/tty/tty0/active" ]; then
+    install --minimal kbd
+    # Allow users to run sudo chvt without password, so we don't need to run
+    # croutoncycle as root
+    echo '%sudo ALL = NOPASSWD:/bin/chvt' > /etc/sudoers.d/chvt
+    chmod 440 /etc/sudoers.d/chvt
 fi
-echo "%$sudogroup ALL = NOPASSWD:/bin/chvt" > /etc/sudoers.d/chvt
-chmod 440 /etc/sudoers.d/chvt
 
 # Add a blank Xauthority to all users' home directories
 touch /etc/skel/.Xauthority
@@ -58,8 +58,11 @@ echo 'mode: blank' > /etc/skel/.xscreensaver
 mkdir -p /usr/share/desktop-directories
 
 # Prevent Upstart from taking over X sessions
-echo > /etc/upstart-xsessions
+if release -eq trusty -eq xenial; then
+    dpkg-divert --local --rename --add /etc/upstart-xsessions
+fi
 
+# FIXME: is this necessary for rootless X11?
 # This makes sure Xephyr, running as user, can write server-*.xkm files to
 # /var/lib/xkb, so it does not conflict with files created by Chromium OS
 # X server in /tmp.
