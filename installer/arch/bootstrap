@@ -127,10 +127,10 @@ while [ -n "$missing" ]; do
     mirrorbase="`echo "$MIRROR" | sed -e "s/\\$repo/$repo/" \
                                       -e "s/\\$arch/$ARCH/"`"
     curlretry -o "$FETCHDIRPKG/$file" "$mirrorbase/$file" 1>&2
-    tar --warning=no-unknown-keyword -xkf "$FETCHDIRPKG/$file" \
+    tar --warning=no-unknown-keyword -xf "$FETCHDIRPKG/$file" \
         --exclude=".PKGINFO" --exclude=".MTREE" \
         --exclude=".INSTALL" --exclude=".Changelog" \
-        --overwrite \
+	    --overwrite \
         -C "$BOOTSTRAPCHROOT"
 
     # Get list of dependencies (ignore versions)
