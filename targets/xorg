@@ -191,7 +191,7 @@ if [ -z "$inteldriver" -a -n "$backport" ] && release -eq precise; then
         xterm x11-common xinput
 else
     install xorg $installvideodrivers -- arch=,xserver-xorg-video-all$backport
-    install arch=ttf_dejavu
+    install arch=ttf-dejavu
 fi
 
 # Remove bad video drivers
