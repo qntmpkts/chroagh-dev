@@ -512,35 +512,16 @@ fi
 # Check if RELEASE is supported
 releaseline="`sed -n "s/^\($RELEASE[^a-z|]*\)\(|.*\)*$/\1/p" \
                                                          "$DISTRODIR/releases"`"
-if [ "${releaseline%"!"}" != "$releaseline" ]; then
-    echo_color tr "WARNING: $RELEASE has reached upstream end-of-life."
-
-    if [ -z "$UPDATE" ]; then
-        if [ -z "$MIRRORSET" ]; then
-            error 2 "\
-That means there will be no package updates available.
-You also have to specify a mirror to crouton (-m) for installation to proceed."
-        fi
-        echo "\
-You have specified a mirror, so installation will proceed anyway.
-You will almost certainly run into issues, but some features may still work.
-Press Ctrl-C to abort; installation will continue in 30 seconds." 1>&2
-    else
-        echo "\
-That means you may have issues updating now or in the future.
-You should upgrade your chroot to a supported version as soon as possible.
-Refer to https://goo.gl/Z5LGVD for upgrade instructions.
-Press Ctrl-C to abort; normal update will continue in 30 seconds." 1>&2
-    fi
-    sleep 30
-elif [ "${releaseline%"*"}" != "$releaseline" ]; then
-    echo_color r "WARNING: $RELEASE is an unsupported release." "
+if [ "${releaseline%"*"}" != "$releaseline" ]; then
+    echo "WARNING: $RELEASE is an unsupported release.
 You will likely run into issues, but things may work with some effort." 1>&2
 
     if [ -z "$UPDATE" ]; then
         echo "Press Ctrl-C to abort; installation will continue in 5 seconds." 1>&2
     else
-        echo "Press Ctrl-C to abort; update will continue in 5 seconds." 1>&2
+        echo "\
+If this is a surprise to you, $RELEASE has probably reached end of life.
+Refer to https://goo.gl/Z5LGVD for upgrade instructions." 1>&2
     fi
     sleep 5
 fi
@@ -740,7 +721,7 @@ fi
 unset SIMULATE
 TARGETNOINSTALL="$RESTOREHOSTBIN"
 if [ -n "$TARGETFILE" ]; then
-    TARGET="`readlink -f -- "$TARGETFILE"`"
+    TARGET="$(readlink -f -- "$TARGETFILE")"
     (. "$TARGET") >> "$PREPARE"
 fi
 t="${TARGETS%,},post-common,"
