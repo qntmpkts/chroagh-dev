@@ -44,7 +44,7 @@ intelhasfbc=''
 pinmesa=''
 intelfbcsupport='y'
 if [ "${ARCH#arm}" = "$ARCH" ]; then
-    inteldriver="arch=xf86-video-intel,xserver-xorg-video-intel$backport"
+    inteldriver="xserver-xorg-video-intel$backport"
 
     # If the system has an Intel FBC-capable video card but has too old a driver
     # to support the chipset, we'll need to disable hardware acceleration.

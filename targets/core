@@ -111,7 +111,7 @@ elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
         fi
 
         echo "Server = $MIRROR" > /etc/pacman.d/mirrorlist
-fi
+    fi
 
     echo 'Ensuring system is up-to-date...' 1>&2
     ret=0
@@ -140,7 +140,6 @@ if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
     if [ ! -f '/etc/default/locale' ] && hash locale-gen 2>/dev/null; then
         echo 'LANG=en_US.UTF-8' > '/etc/default/locale'
         locale-gen --lang en_US.UTF-8
-    if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
         dpkg-reconfigure locales
     fi
 elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
