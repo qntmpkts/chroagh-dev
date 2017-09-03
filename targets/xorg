@@ -44,7 +44,11 @@ intelhasfbc=''
 pinmesa=''
 intelfbcsupport='y'
 if [ "${ARCH#arm}" = "$ARCH" ]; then
-    inteldriver="xserver-xorg-video-intel$backport"
+    if [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
+        inteldriver="xf86-video-intel"
+    else
+        inteldriver="xserver-xorg-video-intel$backport"
+    fi
 
     # If the system has an Intel FBC-capable video card but has too old a driver
     # to support the chipset, we'll need to disable hardware acceleration.
@@ -98,7 +102,7 @@ fi
 
 # On Freon, we need crazy xorg hacks
 if [ -n "$freon" ]; then
-    compile freon '-ldl -ldrm -I/usr/include/libdrm' so libdrm-dev
+    compile freon '-ldl -ldrm -I/usr/include/libdrm' so arch=libdrm,libdrm-dev
 fi
 
 # Pin precise's version of mesa if necessary
