@@ -1,5 +1,5 @@
 #!/bin/sh -e
-# Copyright (c) 2016 The Chromium OS Authors. All rights reserved.
+# Copyright (c) 2015 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -18,7 +18,7 @@ snapshot "$release" audio
 crouton -U -n "$release" -t xorg
 
 echo '
-    iinstall arch=mesa-demos,mesa-utils
+    install arch=mesa-demos,mesa-utils
     mkdir -p /home/tmp
     chmod 777 /home/tmp
     cat > /home/tmp/xinitrc <<END

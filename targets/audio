@@ -81,10 +81,10 @@ build_cras() {
             apt-get update || true
         fi
 
-    elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
+      elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
         pkgsuffix="lib32-"
         pkgconfigpath="/usr/lib32/pkgconfig"
-    fi
+      fi
 
       archgccflags='-m32'
     fi
@@ -102,14 +102,14 @@ build_cras() {
     if release -le precise && [ -n "$cras_arch" ]; then
         install --minimal --asdeps libasound2-dev
         # Manually link .so file
-        libasoundso="/usr/lib$archextrapath/libasound.so"
+        libasoundso="/usr/lib/$cras_arch-linux-gnu/libasound.so"
         if [ ! -f "$libasoundso" ]; then
             addtrap "rm -f '$libasoundso' 2>/dev/null"
             ln -sfT libasound.so.2 "$libasoundso"
         fi
-        ALSALIBDIR="/usr/lib$archextrapath/alsa-lib"
+        ALSALIBDIR="/usr/lib/$cras_arch-linux-gnu/alsa-lib"
     else
-        install --minimal --asdeps libasound2-dev$pkgsuffix
+        install --minimal --asdeps arch=,libasound2-dev$pkgsuffix
         ALSALIBDIR="`PKG_CONFIG_PATH="$pkgconfigpath" \
                                 pkg-config --variable=libdir alsa`/alsa-lib"
     fi
@@ -151,8 +151,13 @@ END
         sed -e 's/SBC_[A-Z0-9_]*/0/g' -i tests/cras_test_client.c
 
         # Directory to install CRAS library/binaries
-        CRASLIBDIR="/usr/local$archextrapath/lib"
-        CRASBINDIR="/usr/local$archextrapath/bin"
+        if [ -n "$cras_arch" ]; then
+            CRASLIBDIR="/usr/local/$cras_arch-linux-gnu/lib"
+            CRASBINDIR="/usr/local/$cras_arch-linux-gnu/bin"
+        else
+            CRASLIBDIR="/usr/local/lib"
+            CRASBINDIR="/usr/local/bin"
+        fi
 
         echo "Compiling CRAS (${cras_arch:-native})..." 1>&2
         # Convert Makefile.am to a shell script, and run it.
