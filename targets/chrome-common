@@ -19,6 +19,7 @@ if [ "${TARGETNOINSTALL:-c}" = 'c' -a "${ARCH#arm}" != "$ARCH" ]; then
 Google Chrome is not officially supported on Arch. You can either install
 Chromium by specifying the chromium target, or install Google Chrome manually
 or via AUR."
+    fi
 fi
 if [ "${TARGETNOINSTALL:-c}" = 'c' ] && release -lt saucy -lt jessie; then
     echo "Google Chrome is not supported on $RELEASE anymore. Installing Chromium instead." 1>&2

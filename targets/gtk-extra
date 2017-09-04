@@ -13,7 +13,7 @@ install arch=,gdebi arch=,gksu arch=netsurf,netsurf-gtk
 
 
 
-if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
+if [ "${DISTROAKA:-"$DISTRO"}" != 'debian' ]; then
     install_dummy network-manager network-manager-gnome
     for BROWSER in netsurf-gtk dillo hv3 ""; do
         test -n "$BROWSER"

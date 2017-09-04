@@ -30,6 +30,7 @@ if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
   </property>
 </channel>
 EOF
+fi
 
 if release -lt xenial && [ "$ARCH" = 'arm64' ]; then
     install_dummy xfce4-battery-plugin
