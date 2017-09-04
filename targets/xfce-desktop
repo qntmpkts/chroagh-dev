@@ -10,6 +10,6 @@ DESCRIPTION='Installs Xfce along with common applications. (Approx. 1200MB)'
 # Avoid /etc/skel/.xscreensaver conflicts
 xsvr='/etc/skel/.xscreensaver'
 [ -f "$xsvr" ] && mv -f "$xsvr" "$xsvr.bak"
-install arch=xfce-goodies,ubuntu=xubuntu-desktop,task-xfce-desktop \
+install arch=xfce4-goodies,ubuntu=xubuntu-desktop,task-xfce-desktop \
         -- network-manager xorg
 [ -f "$xsvr.bak" ] && mv -f "$xsvr.bak" "$xsvr"
