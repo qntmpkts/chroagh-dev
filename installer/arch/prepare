@@ -95,7 +95,9 @@ Initializing pacman keyring (move the mouse to generate entropy)..." 1>&2
     pacman-key --init
 
     if [ "${ARCH#arm}" = "$ARCH" ]; then
+        dirmngr </dev/null
         pacman-key --populate archlinux
+        pacman-key --refresh-keys
     else
         # archlinuxarm-keyring has been installed as part of bootstrap
         pacman-key --populate archlinuxarm
