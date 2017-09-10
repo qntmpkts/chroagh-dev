@@ -8,6 +8,12 @@ CHROOTBIN='brightness croutonpowerd croutonversion host-dbus host-wayland'
 . "${TARGETSDIR:="$PWD"}/common"
 
 ### Append to prepare.sh:
+
+# Make sure that useradd does not automatically add users or groups with
+# UID/GID 1000, so that it is guaranteed to be available when post-common
+# adds the main user
+sed -i -e '/[GU]ID_MIN/s/1000/1001/' /etc/login.defs
+
 echo 'Preparing environment...' 1>&2
 if [ "$VERSION" != '#VERSION#' ]; then
     sed -e "s ^VERSION=.*\$ VERSION='$VERSION' ;" \
