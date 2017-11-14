@@ -72,7 +72,7 @@ int find_nacl(int conn)
     }
     *cut = 0;
 
-    char *cmd = "croutonfindnacl";
+    char *cmd = "/usr/local/bin/croutonfindnacl";
     char* args[] = {cmd, argbuf, cut + 1, NULL};
 
     c = popen2(cmd, args, NULL, 0, outbuf, sizeof(outbuf)-1);
