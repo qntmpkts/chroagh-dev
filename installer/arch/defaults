@@ -19,7 +19,7 @@ esac
 
 if [ -z "$MIRROR" ]; then
     if [ "$ARCH" = 'x86_64' -o "$ARCH" = 'i686' ]; then
-        MIRROR="${CROUTON_MIRROR_arch:-https://archive.archlinux.org/repos/2016/12/01/\$repo/os/\$arch}"
+        MIRROR="${CROUTON_MIRROR_arch:-https://mirrors.kernel.org/archlinux/\$repo/os/\$arch}"
     else
         MIRROR="${CROUTON_MIRROR_alarm:-http://mirror.archlinuxarm.org/armv7h/\$repo}"
     fi
