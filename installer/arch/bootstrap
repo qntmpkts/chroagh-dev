@@ -60,11 +60,11 @@ echo "Fetching repository packages list..." 1>&2
 for repo in $REPOS; do
     echo "Fetching $repo..." 1>&2
     mirrorbase="`echo "$MIRROR" | sed -e "s/\\$repo/$repo/" \
-                                      -e "s/\\$arch/$ARCH/"`"
+    -e "s/\\$arch/$ARCH/"`"
     curlretry -o "$FETCHDIRDB/$repo.db" "$mirrorbase/$repo.db" 1>&2
     # Create package list in this format: $repo:package-version
     tar tf "$FETCHDIRDB/$repo.db" \
-        | sed -n 's|^\(.*\)/$|'"$repo"':\1|p' >> "$LIST"
+    | sed -n 's|^\(.*\)/$|'"$repo"':\1|p' >> "$LIST"
 done
 
 # Get the value of a field in the Arch package database
@@ -73,7 +73,7 @@ getdbfield() {
     local repo="$FETCHDIRDB/$1.db"
     local file="$2/$3"
     local field="$4"
-
+    
     # since pacman-3.5 depends have been merged into desc file for most packages
     if [ "$3" = "depends" ] && ! (tar tf "$repo" | grep -q "$file"); then
         getdbfield "$1" "$2" "desc" "$4"
@@ -102,46 +102,47 @@ bootstrappkg=""
 while [ -n "$missing" ]; do
     package="${missing%% *}"
     missing="${missing#$package }"
-
+    
     # skip libncursesw.so (fix issue #100)
-    if [ "$package" = "libncursesw.so" ]; then 
+    if [ "$package" = "libncursesw.so" ]; then
         echo "skipping $package"
         installed="$installed $package "
         continue
     fi
-
+    
     # Do not install if already installed
     if [ "${installed#*" $package "}" != "$installed" ]; then
         continue
     fi
-
-    echo "Downloading and installing $package..." 1>&2
-    pkg="`grep -m 1 ":$package-[0-9]" "$LIST"`"
+    
+    pkg="`grep ":$package-[0-9]" "$LIST" | tail -1`"
+    repo="${pkg%%:*}"
+    pkgver="${pkg#*:}"
     if [ -z "$pkg" ]; then
         echo "Cannot find package $package..." 1>&2
         exit 1
+    else
+        echo "Downloading and installing $pkgver..." 1>&2
     fi
-    repo="${pkg%:*}"
-    pkgver="${pkg#*:}"
+    
     file="`getdbfield "$repo" "$pkgver" "desc" "FILENAME"`"
     mirrorbase="`echo "$MIRROR" | sed -e "s/\\$repo/$repo/" \
-                                      -e "s/\\$arch/$ARCH/"`"
+    -e "s/\\$arch/$ARCH/"`"
     curlretry -o "$FETCHDIRPKG/$file" "$mirrorbase/$file" 1>&2
-    tar --warning=no-unknown-keyword -xf "$FETCHDIRPKG/$file" \
-        --exclude=".PKGINFO" --exclude=".MTREE" \
-        --exclude=".INSTALL" --exclude=".Changelog" \
-	    --overwrite \
-        -C "$BOOTSTRAPCHROOT"
-
+    tar --warning=no-unknown-keyword -xf "$FETCHDIRPKG/$file" --overwrite \
+    --exclude=".PKGINFO" --exclude=".MTREE" \
+    --exclude=".INSTALL" --exclude=".Changelog" \
+    -C "$BOOTSTRAPCHROOT"
+    
     # Get list of dependencies (ignore versions)
     ndep="`getdbfield "$repo" "$pkgver" "depends" "DEPENDS" \
-                     | sed -n 's/^\([^<>=]*\).*$/\1/p' | tr '\n' ' '`"
-
+    | sed -n 's/^\([^<>=]*\).*$/\1/p' | tr '\n' ' '`"
+    
     # Some packages provide virtual packages (e.g. bash provides sh):
     # Add those to the installed list
     nprovides="`getdbfield "$repo" "$pkgver" "depends" "PROVIDES" \
-                          | tr '\n' ' '`"
-
+    | tr '\n' ' '`"
+    
     bootstrappkg="$bootstrappkg $package"
     installed="$installed $nprovides $package "
     missing="$missing $ndep"
@@ -160,7 +161,7 @@ echo "arch" > "$BOOTSTRAPCHROOT/etc/hostname"
 # Using the default Auto here detects the chroot from uname -m, breaking i686
 # chroots on x86-64.
 sed -i 's/^[ \t]*Architecture[ \t].*/Architecture = '"$ARCH"'/' \
-    "$BOOTSTRAPCHROOT/etc/pacman.conf"
+"$BOOTSTRAPCHROOT/etc/pacman.conf"
 
 echo "$bootstrappkg" > "$BOOTSTRAPCHROOT"/crouton-bootstrap-pkg
 
