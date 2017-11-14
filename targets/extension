@@ -19,7 +19,7 @@ fi
 . "${TARGETSDIR:="$PWD"}/common"
 
 ### Append to prepare.sh:
-install arch=xorg-utils,x11-utils xclip
+install arch=xorg-apps,x11-utils xclip
 
 compile websocket ''
 
