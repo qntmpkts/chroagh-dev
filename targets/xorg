@@ -72,8 +72,8 @@ if [ "${ARCH#arm}" = "$ARCH" ]; then
 fi
 
 # Catalog relevant and irrelevant video drivers
-# Debian sid has modesetting built into xserver-xorg-core; Arch built into xorg-server
-fbdev="arch=xf86-video-fbdev,xserver-xorg-video-fbdev$backport"
+# Debian sid has modesetting built into xserver-xorg-core
+fbdev="arch=,xserver-xorg-video-fbdev$backport"
 
 if release -lt sid -lt kali-rolling -lt vivid; then
     modesetting="xserver-xorg-video-modesetting$backport,debian~sid+ubuntu~vivid+arch="
