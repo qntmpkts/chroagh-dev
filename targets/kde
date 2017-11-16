@@ -10,14 +10,9 @@ CHROOTBIN='crouton-noroot startkde'
 
 ### Append to prepare.sh:
 install --minimal arch=,kde-plasma-desktop \
-    arch=kde-meta-kdeadmin, \
     arch=kde-meta-kdebase, \
-    arch=kde-meta-kdegraphics, \
-    arch=kde-meta-kdepim, \
-    arch=kde-meta-kdeplasma-addons, \
-    arch=kde-meta-kdeutils, \
-    arch=kdesdk-kate, \
-    kde-baseapps kde-runtime plasma-desktop pulseaudio \
+    arch=,kde-baseapps arch=,kde-runtime \
+    plasma-desktop pulseaudio \
     -- network-manager
 
 if release -lt xenial -lt kali -lt stretch; then
