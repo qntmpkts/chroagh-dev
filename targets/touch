@@ -3,21 +3,35 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 if [ "${TARGETNOINSTALL:-c}" = 'c' ] &&
-        [ "$DISTRO" = 'debian' -o "$DISTRO" = 'kali' -o \
-               "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
+        [ "$DISTRO" = 'debian' -o "$DISTRO" = 'kali' ]; then
     error 99 "touch target is not supported on $DISTRO."
 fi
-REQUIRES='x11'
+if [ "${TARGETNOINSTALL:-c}" = 'c' ] &&
+        [ "$DISTRO" = 'arch' ]; then
+    REQUIRES='x11 aur'
+else
+    REQUIRES='x11'
+fi
 DESCRIPTION='Touchscreen and limited generic gesture support.'
 . "${TARGETSDIR:="$PWD"}/common"
 
 ### Append to prepare.sh:
+install_touch_arch() {
+    if release -eq arch; then
+        local chrootusername="`awk -F: '$3==1000{print $1; exit}' '/etc/passwd'`"
+        sudo -u $chrootusername pacaur -S touchegg --needed --noconfirm --noedit
+    fi
+}
+
 if release -lt raring; then
     # As of 2013-01-30, pre-Raring touchegg is useless. Download it manually.
     install_mirror_package 'touchegg' 'pool/universe/t/touchegg'
-else
+fi
+if release -gt raring; then
     install --minimal touchegg
 fi
+
+install_touch_arch
 
 # The global config file.
 cat > /etc/touchegg.conf <<EOF
