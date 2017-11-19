@@ -1,0 +1,59 @@
+#!/bin/sh -e
+
+if [ "${TARGETNOINSTALL:-c}" = 'c' ] &&
+        [ "${DISTROAKA:-"$DISTRO"}" != 'arch' ]; then
+    error 99 "aur target is not supported on $DISTRO."
+fi
+DESCRIPTION='Installs AUR to arch release and uses pacaur as backend.'
+. "${TARGETSDIR:="$PWD"}/common"
+
+### Append to prepare.sh:
+setup_cower() {
+    cd /tmp/build
+    export PATH=${PATH}:/usr/bin/core_perl
+    # Install "cower" from AUR
+    if [ ! -n "$(pacman -Qs cower)" ]; then
+        curl -o PKGBUILD https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=cower
+        sudo -u "$chrootusername" makepkg BUILDDIR=/tmp/build PKGBUILD \
+        --skippgpcheck --install --needed --noconfirm
+    fi
+    cd ~
+}
+setup_pacaur() {
+    cd /tmp/build
+    # Install "pacaur" from AUR
+    if [ ! -n "$(pacman -Qs pacaur)" ]; then
+        curl -o PKGBUILD https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=pacaur
+        sudo -u "$chrootusername" makepkg BUILDDIR=/home/aur/build PKGBUILD \
+        --install --needed --noconfirm
+    fi
+    cd ~
+}
+
+setup_aur() {
+    local chrootusername="`awk -F: '$3==1000{print $1; exit}' '/etc/passwd'`"
+    if [ -z "$chrootusername" ]; then
+        echo "aur target cannot be added until your chroot has been setup first."
+        break
+    else
+        mkdir -p /tmp/build
+        chown -R $chrootusername:$chrootusername /tmp/build
+        # Install the "base-devel" group
+        install --minimal binutils make gcc fakeroot pkg-config
+        # Install cower and pacaur dependencies from arch repos
+        install --minimal expac yajl git
+        setup_cower
+        setup_pacaur
+        echo "$(tput setaf 2)AUR setup complete.$(tput sgr0)" 1>&2
+    fi
+}
+
+setup_aur
+
+WARNING="$(tput blink)$(tput bold)$(tput setaf 3)WARNING!$(tput sgr0)"
+
+TIPS="$TIPS
+You will be able to use  pacaur (e.g., pacaur -S google-chrome).
+
+$WARNING Packages from AUR can cause your chroot to break! $WARNING
+"
