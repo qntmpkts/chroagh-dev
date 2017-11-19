@@ -9,7 +9,6 @@ and please file bug reports when they do!
 
 This is essentially crouton, with the following branch merged:
  - croagh+arch: Add support for Arch Linux.
-
 ## Usage
 
 These instructions assume that you want to install Arch Linux.
@@ -64,7 +63,12 @@ That means you need to do the following to fetch modifications from the tree:
 
 Be careful, as this will erase any other commit you did in your own `master` branch.
 
-Original documentation follows:
+## Notable improvements over other known chroagh forks:
+  * Known to work with current x86_64 archlinux repositories (ca. November 2017)
+  * Includes support for AUR as a target to install in your arch chroot
+  * Under active development
+
+*Original documentation follows:*
 
 # crouton: Chromium OS Universal Chroot Environment
 
