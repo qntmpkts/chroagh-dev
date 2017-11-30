@@ -39,10 +39,6 @@ fi
 
 ### Append to prepare.sh:
 pkg="google-chrome$CHANNEL"
-install_chrome_arch() {
-    local chrootusername="`awk -F: '$3==1000{print $1; exit}' '/etc/passwd'`"
-    sudo -u $chrootusername pacaur -S $1 --needed --noconfirm --noedit
-}
 if [ "$DISTRO" != 'arch' ]; then
     # Only download if it's not already installed, since it auto-updates
     if [ -n "`list_uninstalled '' "$pkg"`" ]; then
@@ -67,5 +63,5 @@ if [ "$DISTRO" != 'arch' ]; then
         echo "$pkg is already installed."
     fi
 else
-    install_chrome_arch $pkg
+    install_pkg $pkg
 fi

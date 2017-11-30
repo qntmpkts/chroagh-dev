@@ -52,7 +52,29 @@ install_dist() {
 
 # install_pkg_dist: see install_pkg() in prepare.sh for details.
 install_pkg_dist() {
-    error 1 'ERROR: install_pkg_dist is not supported on Arch'
+    local pkgs='' params=''
+    local chrootuser="`awk -F: '$3==1000{print $1; exit}' '/etc/passwd'`"
+    while [ "$#" != 0 ]; do
+        if [ "$1" = "--minimal" ]; then
+            : # Ignore: irrelevant for arch
+        elif [ "$1" = "--asdeps" ]; then
+            params="--asdeps"
+        else
+            break
+        fi
+        shift
+    done
+        while [ "$#" != 0 ]; do
+        if [ "$1" = '--' ]; then
+            shift
+            break
+        fi
+        pkgs="$pkgs $1"
+        shift
+    done
+    if [ -n "$pkgs" ]; then
+        sudo -u $chrootuser pacaur -S --needed --noconfirm $params --noedit $pkgs
+    fi
 }
 
 
