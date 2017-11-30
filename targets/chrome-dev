@@ -9,6 +9,6 @@ DESCRIPTION='Google Chrome browser, dev channel.'
 if [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
     CHANNEL='-dev'
 else
-    CHANNEL='unstable'
+    CHANNEL='-unstable'
 fi
 ### append chrome-common

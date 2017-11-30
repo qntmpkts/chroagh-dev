@@ -6,9 +6,5 @@ DESCRIPTION='Google Chrome browser, beta channel.'
 . "${TARGETSDIR:="$PWD"}/chrome-common"
 
 ### Append to prepare.sh:
-if [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
-    CHANNEL='-beta'
-else
-    CHANNEL='beta'
-fi
+CHANNEL='-beta'
 ### append chrome-common

@@ -7,18 +7,13 @@
 # channels of the Google Chrome browser that the relevant targets source.
 
 # This command expects CHANNEL to be set with the requested Google Chrome
-# channel: stable, beta, or unstable.
+# channel: stable, beta, or dev/unstable.
 
 if [ "${TARGETNOINSTALL:-c}" = 'c' -a "${ARCH#arm}" != "$ARCH" ]; then
     if [ "${ARCH#arm}" != "$ARCH" ]; then
         echo 'Google Chrome does not yet have an ARM build. Installing Chromium instead.' 1>&2
         TARGET=chromium
         . "${TARGETSDIR:="$PWD"}/$TARGET"
-    elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
-        error 99 "\
-Google Chrome is not officially supported on Arch. You can either install
-Chromium by specifying the chromium target, or install Google Chrome manually
-or via AUR."
     fi
 fi
 if [ "${TARGETNOINSTALL:-c}" = 'c' ] && release -lt saucy -lt jessie; then
@@ -34,30 +29,43 @@ if [ "${TARGETNOINSTALL:-c}" = 'c' -a "$TARGET" != 'chrome' ]; then
         echo "chrome" >> "${TARGETDEDUPFILE:-/dev/null}"
     fi
 fi
-REQUIRES='x11'
+if [ "${TARGETNOINSTALL:-c}" = 'c' ] &&
+        [ "$DISTRO" = 'arch' ]; then
+    REQUIRES='x11 aur'
+else
+    REQUIRES='x11'
+fi
 . "${TARGETSDIR:="$PWD"}/common"
 
 ### Append to prepare.sh:
-# Only download if it's not already installed, since it auto-updates
-pkg="google-chrome-$CHANNEL"
-if [ -n "`list_uninstalled '' "$pkg"`" ]; then
-    # Chrome needs hicolor-icon-theme to configure/install
-    install hicolor-icon-theme
-
-    url="https://dl.google.com/linux/direct/${pkg}_current_$ARCH.$PKGEXT"
-    tmp="`mktemp crouton.XXXXXX --tmpdir=/tmp`"
-    addtrap "rm -f '$tmp'"
-
-    wget "$url" -O "$tmp"
-
-    # Remove other providers of google-chrome, then install the package
-    for c in stable beta dev; do
-        c="google-chrome-$c"
-        if [ -z "`list_uninstalled '' "$c"`" ]; then
-            remove "$c"
-        fi
-    done
-    install_pkg "$tmp"
+pkg="google-chrome$CHANNEL"
+install_chrome_arch() {
+    local chrootusername="`awk -F: '$3==1000{print $1; exit}' '/etc/passwd'`"
+    sudo -u $chrootusername pacaur -S $1 --needed --noconfirm --noedit
+}
+if [ "$DISTRO" != 'arch' ]; then
+    # Only download if it's not already installed, since it auto-updates
+    if [ -n "`list_uninstalled '' "$pkg"`" ]; then
+        # Chrome needs hicolor-icon-theme to configure/install
+        install hicolor-icon-theme
+        
+        url="https://dl.google.com/linux/direct/${pkg}_current_$ARCH.$PKGEXT"
+        tmp="`mktemp crouton.XXXXXX --tmpdir=/tmp`"
+        addtrap "rm -f '$tmp'"
+        
+        wget "$url" -O "$tmp"
+        
+        # Remove other providers of google-chrome, then install the package
+        for c in stable beta dev; do
+            c="google-chrome-$c"
+            if [ -z "`list_uninstalled '' "$c"`" ]; then
+                remove "$c"
+            fi
+        done
+        install_pkg "$tmp"
+    else
+        echo "$pkg is already installed."
+    fi
 else
-    echo "$pkg is already installed."
+    install_chrome_arch $pkg
 fi
