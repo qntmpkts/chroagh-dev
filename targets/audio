@@ -102,12 +102,12 @@ build_cras() {
     if release -le precise && [ -n "$cras_arch" ]; then
         install --minimal --asdeps libasound2-dev
         # Manually link .so file
-        libasoundso="/usr/lib/$cras_arch-linux-gnu/libasound.so"
+        libasoundso="/usr/lib$archextrapath/libasound.so"
         if [ ! -f "$libasoundso" ]; then
             addtrap "rm -f '$libasoundso' 2>/dev/null"
             ln -sfT libasound.so.2 "$libasoundso"
         fi
-        ALSALIBDIR="/usr/lib/$cras_arch-linux-gnu/alsa-lib"
+        ALSALIBDIR="/usr/lib$archextrapath/alsa-lib"
     else
         install --minimal --asdeps arch=,libasound2-dev$pkgsuffix
         ALSALIBDIR="`PKG_CONFIG_PATH="$pkgconfigpath" \
@@ -152,8 +152,8 @@ END
 
         # Directory to install CRAS library/binaries
         if [ -n "$cras_arch" ]; then
-            CRASLIBDIR="/usr/local/$cras_arch-linux-gnu/lib"
-            CRASBINDIR="/usr/local/$cras_arch-linux-gnu/bin"
+            CRASLIBDIR="/usr/local$archextrapath/lib"
+            CRASBINDIR="/usr/local$archextrapath/bin"
         else
             CRASLIBDIR="/usr/local/lib"
             CRASBINDIR="/usr/local/bin"

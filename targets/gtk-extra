@@ -10,7 +10,7 @@ DESCRIPTION='GTK-based tools including gdebi, gksu, and a simple browser.'
 if [ "${DISTROAKA:-"$DISTRO"}" != 'arch' ]; then
     install_dummy network-manager network-manager-gnome
 fi
-install arch=,gdebi arch=,gksu arch=netsurf,netsurf-gtk
+install arch=,gdebi gksu arch=netsurf,netsurf-gtk
 
 if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
     for BROWSER in netsurf-gtk dillo hv3 ""; do
