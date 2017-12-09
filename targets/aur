@@ -4,7 +4,7 @@ if [ "${TARGETNOINSTALL:-c}" = 'c' ] &&
         [ "${DISTROAKA:-"$DISTRO"}" != 'arch' ]; then
     error 99 "aur target is not supported on $DISTRO."
 fi
-DESCRIPTION='Installs AUR to arch release and uses pacaur as backend.'
+DESCRIPTION='Installs Arch User Repository (AUR), using pacaur as backend.'
 . "${TARGETSDIR:="$PWD"}/common"
 
 ### Append to prepare.sh:
@@ -24,7 +24,7 @@ setup_pacaur() {
     # Install "pacaur" from AUR
     if [ ! -n "$(pacman -Qs pacaur)" ]; then
         curl -o PKGBUILD https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=pacaur
-        sudo -u "$chrootusername" makepkg BUILDDIR=/home/aur/build PKGBUILD \
+        sudo -u "$chrootusername" makepkg BUILDDIR=/tmp/build PKGBUILD \
         --install --needed --noconfirm
     fi
     cd ~
@@ -44,7 +44,8 @@ setup_aur() {
         install --minimal expac yajl git
         setup_cower
         setup_pacaur
-        echo "$(tput setaf 2)AUR setup complete.$(tput sgr0)" 1>&2
+        rm -rf /tmp/build
+        echo_color g "Arch User Repository (AUR) setup complete."
     fi
 }
 
