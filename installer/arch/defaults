@@ -18,9 +18,9 @@ arm*) ARCH="armv7h";;
 esac
 
 if [ -z "$MIRROR" ]; then
-    if [ "$ARCH" = 'x86_64' -o "$ARCH" = 'i686' ]; then
-        MIRROR="${CROUTON_MIRROR_arch:-https://mirrors.kernel.org/archlinux/\$repo/os/\$arch}"
-    else
-        MIRROR="${CROUTON_MIRROR_alarm:-http://mirror.archlinuxarm.org/armv7h/\$repo}"
-    fi
+    case "$ARCH" in
+    i686 ) MIRROR="${CROUTON_MIRROR_arch:-https://mirror.archlinux32.org/\$arch/\$repo}";;
+    x86_64 ) MIRROR="${CROUTON_MIRROR_arch:-https://mirrors.kernel.org/archlinux/\$repo/os/\$arch}";;
+    armv7h ) MIRROR="${CROUTON_MIRROR_alarm:-http://mirror.archlinuxarm.org/armv7h/\$repo}";;
+    esac
 fi
