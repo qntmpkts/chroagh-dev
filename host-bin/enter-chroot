@@ -650,7 +650,7 @@ if [ "$NOLOGIN" != 1 ] && grep -q '^root:' "$passwd" 2>/dev/null; then
     # If it fails, or if the user does not exist, `id -un '$dbususer'`
     # will fail, and we fallback on a default user name ("messagebus")
     dbususer="`echo "cat /busconfig/user/text()" \
-        | xmllint --shell "$CHROOT/etc/dbus-1/system.conf" 2>/dev/null \
+        | xmllint --shell "$CHROOT/usr/share/dbus-1/system.conf" 2>/dev/null \
         | grep '^[a-z][-a-z0-9_]*$' || true`"
     chrootcmd "
         if ! hash dbus-daemon 2>/dev/null; then
